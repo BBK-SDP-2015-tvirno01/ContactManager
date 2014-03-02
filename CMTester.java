@@ -134,6 +134,75 @@ public class CMTester
 		assertEquals(result,expected);
 	}
 
+	@test
+	public void testContactManagerAddFirstContact()
+	{
+		String name = "Alice";
+		String notes = "test notes";
+		testCM.addNewContact(name,notes);
+
+		assertTrue(testCM.contactList.contains(testContact));
+	}
+
+	@test
+	public void testContactManagerAddNewContact()
+	{
+		String name;
+		String notes;
+		
+		for(i=0;i=1;i++)
+		{
+			testCM.addNewContact("contact"+i,"notes"+i);
+		}
+
+		Contact checkContact0 = new Contact("contact0","notes0",0);
+		Contact checkContact1 = new Contact("contact1","notes1",1);
+		
+
+		assertTrue(testCM.contactList.contains(checkContact0));
+		assertTrue(testCM.contactList.contains(checkContract1));
+	}
+
+	@test(expected = NullPointerException.class)
+	public void testContactManagerAddNewNullNameContact()
+	{
+		String name;
+		String notes= = "test";
+		testCM.addNewContact(name,notes);
+	} 
+
+	@test(expected = NullPointerException.class)
+	public void testContactManagerAddNewNullNotesContact()
+	{
+		String name = "test";
+		String notes;
+		testCM.addNewContact(name,notes);
+	} 
+
+	@test
+	public void 
+	{
+		
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
