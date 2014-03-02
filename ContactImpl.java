@@ -37,16 +37,13 @@ public class ContactImpl implements Contact
 
 	public void addNotes(String note)
 	{
-		Calendar rightNow = Calendar.getInstance();
 		String eol = System.getProperty("line.seperator");
-		String date&time = rightNow.toString();
 
 		if(this.contactNotes==null || this.contactNotes.equals(""))
 		{
-			this.contactNotes = date&time + eol + note;	
+			this.contactNotes = note;	
 		}else{
-			this.contactNotes = this.contactNotes + eol + eol
-						+ date&time + eol + note;
+			this.contactNotes = this.contactNotes + eol + note;
 
 		}
 	}

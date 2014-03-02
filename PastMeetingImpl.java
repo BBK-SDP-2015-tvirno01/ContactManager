@@ -11,7 +11,7 @@ public class PastMeetingImpl extends MeetingImpl implements PastMeeting
 		String time&date = rightNow.toString();
 
 		super(date, participants, ID);
-		this.meetingNotes = time&date+eol+notes;
+		this.meetingNotes = notes;
 	}
 
 	public String getNotes()
@@ -22,23 +22,19 @@ public class PastMeetingImpl extends MeetingImpl implements PastMeeting
 		{
 			return "";
 		}else{
-			return 	"Meeting ID: "+this.meetingID+eol+
-				"Date: "+this.meetingDate.toString()+eol+
-				"Notes: "+this.meetingNotes;
+			return 	this.meetingNotes;
 		}
 	}
 
 	public void addNotes(String text)
 	{
 		String eol = System.getProperty("line.seperator");
-		Calendar rightNow = Calendar.getInstance();
-		String time&date = rightNow.toString();
 		
 		if(this.meetingNotes==null)
 		{
 			this.meetingNotes = text;
 		}else{
-			this.meetingNotes = this.meetingNotes + eol + eol + time&date + eol + text;
+			this.meetingNotes = this.meetingNotes + eol + text;
 		}
 	}
 

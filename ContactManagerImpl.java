@@ -10,8 +10,8 @@ public class ContactManagerImpl
 
 	private int contactCount;
 	private int meetingCount;
-	private Collection<Contact> contactList;
-	private Collection<Meeting> meetingList;
+	private ArrayList<Contact> contactList;
+	private ArrayList<Meeting> meetingList;
 	private String contactFile;
 	private String meetingFile;
 	private String startupFile;
@@ -473,7 +473,7 @@ public class ContactManagerImpl
 				control.add(i);
 			}
 
-			Set<Contact> result = new AbstractSet<Contact>();
+			Set<Contact> result = new HashSet<Contact>();
 
 			for(Contact c : this.contactList)
 			{
@@ -505,7 +505,7 @@ public class ContactManagerImpl
 				throw NullPointerException;
 			}
 
-			Set<Contact> result = new AbstractSet<Contact>();
+			Set<Contact> result = new HashSet<Contact>();
 
 			for(Contact c : this.contactList)
 			{
