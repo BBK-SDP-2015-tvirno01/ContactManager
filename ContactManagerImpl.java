@@ -18,9 +18,7 @@ public class ContactManagerImpl
 
 	public ContactManagerImpl()
 	{
-		contactFile = "."+File.seperator+"ContactList.txt";
-		meetingFile = "."+File.seperator+"MeetingList.txt";
-		startUpFile = "."+File.seperator+"CMStartup.txt";
+		contactFile = "."+File.seperator+"contacts.txt";
 		this.readLists();
 		Writer hookWriter = new Writer(this);
 		Thread hook = new Thread(hookWriter);
@@ -31,22 +29,16 @@ public class ContactManagerImpl
 	private void readLists()
 	{
 		File cFile = new File(contactFile);
-		File mFile = new File(meetingFile);
-		File sFile = new File(startupFile);
 		BufferedReader cIn = null;
-		BufferedReader mIn = null;
-		BufferedReader sIn = null;
 		try
 		{			
 			cIn = new BufferedReader(new FileReader(cFile));
-			mIn = new BufferedReader(new FileReader(mFile));
-			sIn = new BufferedReader(new FileReader(sFile));
 
 			String line;
 
 			String[] sFields = new String[1];
 
-			while((line = sIn.readLine()) != null)
+			while((line = cIn.readLine()) != "ContactList")
 			{
 				sFields = line.split("\t");
 				this.contactCount = Integer.parseInt(sFields[0]);
@@ -58,10 +50,10 @@ public class ContactManagerImpl
 			int cID;
 			String cNotes;
 
-			while((line = cIn.readLine()) != null)
+			while((line = cIn.readLine()) != "MeetingList")
 			{
 				cFields = line.split("\t");
-				cID = Integer.parseInt(cFields[0];
+				cID = Integer.parseInt(cFields[0]);
 				cName = cFields[1];
 				cNotes = cFields[2];
 				Contact newContact = new ContactImpl(cName,cNotes,cID);
@@ -76,7 +68,7 @@ public class ContactManagerImpl
 			int mID;
 			String mNotes;
 			
-			while((line = mIn.readLine()) != null)
+			while((line = cIn.readLine()) != null)
 			{
 				mFields = line.split("\t");
 				mID = Integer.parseInt(mFields[0]);
@@ -108,8 +100,6 @@ public class ContactManagerImpl
 			ex.printStackTrace();
 		}finally{
 			closeReader(cIn);
-			closeReader(mIn);
-			closeReader(sIn);
 		}
 	}
 
@@ -129,27 +119,29 @@ public class ContactManagerImpl
 	public void writeLists()
 	{
 		File cFile = new File(contactFile);
-		File mFile = new File(meetingFile);
-		File sFile = new File(startupFile);
 
 		try
 		{
 			PrintWriter cOut = new PrintWriter(cFile);
-			PrintWriter mOut = new PrintWriter(mFile);
-			PrintWriter sOut = new PrintWriter(sFile);
+
+			//Clear contents of file prior to archiving
+			cOut.write("");	
 
 			String output;
 
 			output = this.contactCount + "\t" + this.meetingCount;
-			sOut.println(output);
-			sOut.flush();
+			cOut.println(output);
+
+			cOut.println("ContactList");
 
 			for(Contact c : contactList)
 			{
 				output = c.contactID + "\t" + c.contactName + "\t" + c.contactNotes;
 				cOut.println(output);
 			}
-			cOut.flush();
+
+			cOut.println("MeetingList");
+
 			SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd HHmmss");
 
 			for(Meeting m : meetingList)
@@ -165,7 +157,7 @@ public class ContactManagerImpl
 					output = output + "\t" + c.contactID;
 				}
 
-				mOut.println(output);
+				cOut.println(output);
 			}
 
 

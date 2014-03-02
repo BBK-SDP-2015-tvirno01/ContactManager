@@ -180,11 +180,74 @@ public class CMTester
 	} 
 
 	@test
-	public void 
+	public void testContactManagerGetContactsID()
 	{
-		
+		for(i=1;i=10;i++)
+		{
+			testCM.addNewContact("contact"+i,"notes"+i);
+		}
+
+		Set<Contact> result = testCM.getContacts(1,3,7);
+
+		Contact checkContact1 = new Contact("contact1","notes1",1);
+		Contact checkContact3 = new Contact("contact3","notes3",3);
+		Contact checkContact7 = new Contact("contact7","notes7",7);
+
+		Set<Contact> expected = new HashSet<Contact>();
+		expected.add(checkContact1);
+		expected.add(checkContact3);
+		expected.add(checkContact7);
+
+		assertEquals(result, expected);		
 	}
 
+	@test(expected IllegalArgumentException.class)
+	public void testContactManagerGetContactsID()
+	{
+		for(i=1;i=10;i++)
+		{
+			testCM.addNewContact("contact"+i,"notes"+i);
+		}
+
+		Set<Contact> result = testCM.getContacts(1,3,20);
+
+		Contact checkContact1 = new Contact("contact1","notes1",1);
+		Contact checkContact3 = new Contact("contact3","notes3",3);
+
+		assertTrue(testCM.result.contains(checkContact1));
+		assertTrue(testCM.result.contains(checkContact3));		
+	}
+
+	@test
+	public void testContactManagerGetContactsString()
+	{
+
+		testCM.addNewContact("contact1","notes3");
+
+		for(i=1;i=2;i++)
+		{
+			testCM.addNewContact("contact"+i,"notes"+i);
+		}
+
+		Contact checkContact3 = new Contact("contact1","notes3",1);
+		Contact checkContact1 = new Contact("contact1","notes",2);
+		Contact checkContact2 = new Contact("contact2","notes2",3);
+
+		Set<Contact> expected = new HashSet<Contact>();
+		expected.add(checkContact3);
+		expected.add(checkContact1);
+
+		Set<Contact> result = tsetCM.getContacts("Contact1");		
+
+
+		assertEquals(expected, result);
+
+		result = testCM.getcontacts(C);
+
+		expected.add(checkContact2);
+
+		assertEquals(expected, result);
+	}
 
 
 
