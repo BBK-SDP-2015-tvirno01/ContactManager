@@ -202,7 +202,7 @@ public class CMTester
 	}
 
 	@test(expected IllegalArgumentException.class)
-	public void testContactManagerGetContactsID()
+	public void testContactManagerGetContactsIDException()
 	{
 		for(i=1;i=10;i++)
 		{
@@ -249,6 +249,68 @@ public class CMTester
 		assertEquals(expected, result);
 	}
 
+	@test(expected NullPointerException.class)
+	public void testContactManagerGetContactsNullString()
+	{
+		String search = null;
+
+		testCM.getContacts(search);
+	}
+
+	@test
+	public void testContactManagerGetContactsStringNoMatch()
+	{
+		for(i=1;i=10;i++)
+		{
+			testCM.addNewContact("contact"+i,"notes"+i);
+		}
+
+		Set<Contact> result = tsetCM.getContacts("noMatch");		
+
+
+		assertTrue(result.isEmpty());
+	}
+
+	@test
+	public void testContactManagerAddFutureMeetingFirst()
+	{
+		Calendar testDate = Calendar.getInstance();
+
+		Set<Contact> testParticipants = new HashSet<Contact>();
+
+		String iContact;
+		String iNotes;
+		for(i=0;i=10;i++)
+		{
+			iContact = "testContact" + i;
+			iNotes = "testNotes" + i;
+			Contact testContact = new ContactImpl(iContact,iNotes,i);
+			testCM.
+			testParticipants.add(testContact);
+		}
+
+		assertEquals(testCM.addFutureMeeting(testParticipants,testDate),1);
+
+		Meeting expected = new FutureMeeting(testParticipants, testDate, 1);
+
+		FutureMeeting result = getFutureMeeting(1);
+
+		assertEquals(result, expected);
+
+		assertEquals(testCM.addFutureMeeting(testParticipants,testDate),2);
+
+		expected = new FutureMeeting(testParticipants, testDate, 2);
+
+		result = getFutureMeeting(2);
+
+		assertEquals(result, expected);
+	}
+	
+	@test(expected IllegalArgumentException.class)
+	public void testContactManagerAddFutureMeeting()
+	{
+		
+	}
 
 
 
