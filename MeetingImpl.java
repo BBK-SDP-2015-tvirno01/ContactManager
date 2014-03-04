@@ -16,7 +16,7 @@ public class MeetingImpl implements Meeting
 		this.participants = participants;
 	}
 
-	public int getID()
+	public int getId()
 	{
 		return this.meetingID;
 	}
@@ -26,7 +26,7 @@ public class MeetingImpl implements Meeting
 		return this.meetingDate;
 	}
 
-	public Set<Contact> getContacts;
+	public Set<Contact> getContacts()
 	{
 		return participants;
 	}

@@ -3,15 +3,23 @@
 import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
-import java.util.File;
+import java.io.File;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.util.Date;
+import java.io.Reader;
 
 public class ContactManagerImpl
 {
 
 	private int contactCount;
 	private int meetingCount;
-	private ArrayList<Contact> contactList;
-	private ArrayList<Meeting> meetingList;
+	private ArrayList<ContactImpl> contactList;
+	private ArrayList<MeetingImpl> meetingList;
 	private String contactFile;
 	private String meetingFile;
 	private String startupFile;
@@ -20,9 +28,9 @@ public class ContactManagerImpl
 	{
 		contactFile = "."+File.seperator+"contacts.txt";
 		this.readLists();
-		Writer hookWriter = new Writer(this);
+		Flusher hookWriter = new Flusher(this);
 		Thread hook = new Thread(hookWriter);
-		addShutdownHook(hook);
+		Runtime.getRuntime().addShutdownHook(hook);
 	}
 
 
@@ -67,6 +75,7 @@ public class ContactManagerImpl
 			Calendar mCal = Calendar.getInstance();
 			int mID;
 			String mNotes;
+			int i;
 			
 			while((line = cIn.readLine()) != null)
 			{
@@ -76,9 +85,9 @@ public class ContactManagerImpl
 				mCal = setTime(mDate);
 				mNotes = mFields[3];
 				
-				for(i=3;i=mFields.length();i++)
+				for(i=3;i==99;i++)
 				{
-					if(mFields[i]="")
+					if(mFields[i].equals(""))
 					{
 						break;
 					}else{
@@ -116,14 +125,13 @@ public class ContactManagerImpl
 		}
 	}	
 
-	public void writeLists()
+	private void writeLists()
 	{
 		File cFile = new File(contactFile);
-
+		PrintWriter cOut = null;
 		try
 		{
-			PrintWriter cOut = new PrintWriter(cFile);
-
+			cOut = new PrintWriter(cFile);
 			//Clear contents of file prior to archiving
 			cOut.write("");	
 
@@ -144,7 +152,7 @@ public class ContactManagerImpl
 
 			SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd HHmmss");
 
-			for(Meeting m : meetingList)
+			for(MeetingImpl m : meetingList)
 			{
 				output = m.meetingID + "\t" + f.format(m.meetingDate);
 				
@@ -152,7 +160,7 @@ public class ContactManagerImpl
 				
 				output  = output + "\t" + pM.meetingNotes;
 
-				for(Contact c : m.participants)
+				for(ContactImpl c : m.participants)
 				{
 					output = output + "\t" + c.contactID;
 				}
@@ -162,13 +170,11 @@ public class ContactManagerImpl
 
 
 		}catch(FileNotFoundException ex){
-			System.out.println("Cannot write to file")
+			System.out.println("Cannot write to file");
 		}catch(IOException ex){
 			ex.printStackTrace();
 		}finally{
 			cOut.close();
-			mOut.close();
-			sOut.close();
 		}
 
 	}
@@ -182,8 +188,8 @@ public class ContactManagerImpl
 	private Meeting addNewMeeting(Calendar date, Set<Contact> contacts, String text)
 	{
 		this.meetingCount = this.meetingCount + 1;
-		Meeting nM = new PastMeeting(date, contacts, text, this.meetingCount); //upcast new PastMeeting as Meeting (hence all meetings are instances of eachother)
-		Meeting newMeeting = nM;
+		Meeting nM = new PastMeetingImpl(date, contacts, text, this.meetingCount); 
+		Meeting newMeeting = (Meeting) nM;	//upcast new PastMeeting as Meeting (hence all meetings are instances of eachother)
 		return newMeeting;
 	}
 
@@ -193,10 +199,10 @@ public class ContactManagerImpl
 		{
 			if(inPast(date) || !contactList.containsAll(contacts))
 			{
-				throw IllegalArgumentException;
+				throw new IllegalArgumentException();
 			}
 
-			FutureMeeting newMeeting = addNewMeeting(date, contacts, ""); //down cast Meeting as FutureMeeting
+			FutureMeeting newMeeting = (FutureMeeting) addNewMeeting(date, contacts, ""); //down cast Meeting as FutureMeeting
 			this.meetingList.add(newMeeting);
 			return newMeeting.getID();
 
@@ -209,16 +215,16 @@ public class ContactManagerImpl
 	{
 		try
 		{
-			Meeting result = this.getMeeting(id);
+			Meeting result = (PastMeeting) this.getMeeting(id);
 			if(result.equals(null))
 			{
 				return null;
 			}else{
-				if(inPast(result.meetingDate)
+				if(inPast(result.meetingDate))
 				{
 					return result;
 				}else{
-					throw IllegalArgumentException;
+					throw new IllegalArgumentException();
 				}
 			}
 		}catch(IllegalArgumentException ex){
@@ -230,14 +236,14 @@ public class ContactManagerImpl
 	{
 		try
 		{
-			Meeting result = this.getMeeting(id);
+			Meeting result = (FutureMeeting) this.getMeeting(id);
 			if(result.equals(null))
 			{
 				return null;
 			}else{
-				if(inPast(result.meetingDate)
+				if(inPast(result.meetingDate))
 				{
-					throw IllegalArgumentException;
+					throw new IllegalArgumentException();
 				}else{
 					return result;
 				}
@@ -249,9 +255,9 @@ public class ContactManagerImpl
 
 	public Meeting getMeeting(int id)
 	{
-		for(Meeting m : meetingList)
+		for(MeetingImpl m : meetingList)
 		{
-			if(m.meetingID==int id)
+			if(m.meetingID==id)
 			{
 				Meeting result = m;
 				return result;
@@ -269,32 +275,22 @@ public class ContactManagerImpl
 		{
 			if(!contactList.contains(contact))
 			{
-				throw IllegalArgumentException;
+				throw new IllegalArgumentException();
 			}else{
-				for(Meeting m : meetingList)
+				for(MeetingImpl m : meetingList)
 				{
 					if(!isPast(m.meetingDate))
 					{
 						if(m.participants.contains(contact))
 						{
-							result.add(m.clone());
+							result.add(m);
 						}
 					}
 				}
 			}
 			
-			Comparator<Meeting> cDate = new Comparator<Meeting>
-			{
-				public int compare(Meeting m1, Meeting m2)
-				{
-					if(m1.meetingDate.before(m2.meetingDate))
-					{
-						return 1;
-					}else{
-						return -1;
-					}
-				}
-			} 
+			Comparator<MeetingImpl> cDate = new MeetingComparator<MeetingImpl>();
+
 			Collections.sort(result, cDate);
 
 			return result;
@@ -310,26 +306,16 @@ public class ContactManagerImpl
 		SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd");
 
 		
-		for(Meeting m : meetingList)
+		for(MeetingImpl m : meetingList)
 		{
-			if(f.format(date).equals(f.format(m.meetingDate))
+			if(f.format(date).equals(f.format(m.meetingDate)))
 			{
-				result.add(m.clone());
+				result.add(m);
 			}
 		}
 
-			Comparator<Meeting> cDate = new Comparator<Meeting>
-			{
-				public int compare(Meeting m1, Meeting m2)
-				{
-					if(m1.meetingDate.before(m2.meetingDate))
-					{
-						return 1;
-					}else{
-						return -1;
-					}
-				}
-			} 
+			Comparator<MeetingImpl> cDate = new MeetingComparator<MeetingImpl>();
+
 			Collections.sort(result, cDate);
 
 			return result;
@@ -344,32 +330,22 @@ public class ContactManagerImpl
 		{
 			if(!contactList.contains(contact))
 			{
-				throw IllegalArgumentException;
+				throw new IllegalArgumentException();
 			}else{
-				for(Meeting m : meetingList)
+				for(MeetingImpl m : meetingList)
 				{
 					if(isPast(m.meetingDate))
 					{
 						if(m.participants.contains(contact))
 						{
-							result.add(m.clone());
+							result.add(m);
 						}
 					}
 				}
 			}
 			
-			Comparator<Meeting> cDate = new Comparator<Meeting>
-			{
-				public int compare(Meeting m1, Meeting m2)
-				{
-					if(m1.meetingDate.before(m2.meetingDate))
-					{
-						return 1;
-					}else{
-						return -1;
-					}
-				}
-			} 
+			Comparator<MeetingImpl> cDate = new MeetingComparator<MeetingImpl>();
+
 			Collections.sort(result, cDate);
 
 			return result;
@@ -385,12 +361,12 @@ public class ContactManagerImpl
 		{
 			if(contacts.equals(null) || date.equals(null) || text.equals(null))
 			{
-				throw NullPointerException;
+				throw new NullPointerException();
 			}
 
 			if(contacts.isEmpty() || !contactList.containsAll(contacts))
 			{
-				throw IllegalArgumentException;
+				throw new IllegalArgumentException();
 			}
 
 			this.meetingCount = this.meetingCount + 1;
@@ -411,19 +387,19 @@ public class ContactManagerImpl
 		{
 			if(text.equals(null))
 			{
-				throw NullPointerException;
+				throw new NullPointerException();
 			}
 			
-			PastMeeting pMeeting = getMeeting(id); //downcast Meeting as PastMeeting
+			PastMeeting pMeeting = (PastMeeting) getMeeting(id); //downcast Meeting as PastMeeting
 	
 			if(pMeeting.equals(null))
 			{
-				throw IllegalArgumentException;
+				throw new IllegalArgumentException();
 			}
 	
-			if(!isPast(pMeeting.meetingDate)
+			if(!isPast(pMeeting.meetingDate))
 			{
-				throw IllegalStateException;
+				throw new IllegalStateException();
 			}
 
 			pMeeting.addNotes(text);
@@ -431,7 +407,7 @@ public class ContactManagerImpl
 			System.out.println("Meeting notes are null");
 		}catch(IllegalArgumentException ex){
 			System.out.println("Meeting ID not recognised");
-		}catch(IllegalStateException ex{
+		}catch(IllegalStateException ex){
 			System.out.println("Meeting occurs in the future");
 		}
 	}
@@ -442,7 +418,7 @@ public class ContactManagerImpl
 		{
 			if(name.equals(null) || notes.equals(null))
 			{
-				throw NullPointerException;
+				throw new NullPointerException();
 			}
 			
 			this.contactCount = this.contactCount + 1;
@@ -458,7 +434,7 @@ public class ContactManagerImpl
 	{
 		try
 		{
-			Set<int> control = new AbstractSet<int>();
+			Set<int> control = new HashSet<int>();
 
 			for(int i : ids)
 			{
@@ -467,18 +443,18 @@ public class ContactManagerImpl
 
 			Set<Contact> result = new HashSet<Contact>();
 
-			for(Contact c : this.contactList)
+			for(ContactImpl c : this.contactList)
 			{
 				if(control.contains(c.contactID))
 				{
-					result.add(c.clone());
+					result.add(c);
 					control.remove(c.contactID);
 				}
 			}
 
 			if(!control.isEmpty())
 			{
-				throw IllegalArgumentException;
+				throw new IllegalArgumentException();
 			}
 
 			return result;
@@ -494,16 +470,16 @@ public class ContactManagerImpl
 		{
 			if(name.equals(null))
 			{
-				throw NullPointerException;
+				throw new NullPointerException();
 			}
 
 			Set<Contact> result = new HashSet<Contact>();
 
-			for(Contact c : this.contactList)
+			for(ContactImpl c : this.contactList)
 			{
 				if(c.contactName.contains(name))
 				{
-					result.add(c.clone());
+					result.add(c);
 				}
 			}
 
@@ -516,7 +492,7 @@ public class ContactManagerImpl
 
 	public void flush()
 	{
-		this.writeLists;
+		writeLists();
 	}
 
 }

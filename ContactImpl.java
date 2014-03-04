@@ -1,15 +1,13 @@
 
-import java.util.Calendar
-
 public class ContactImpl implements Contact
 {
 	public final int contactID;
-	public final Sting contactName;
+	public final String contactName;
 	private String contactNotes;
 
 	public ContactImpl(String name, String notes, int ID)
 	{
-		this.contact ID = ID;
+		this.contactID = ID;
 		this.contactName = name;
 		this.addNotes(notes);
 	}

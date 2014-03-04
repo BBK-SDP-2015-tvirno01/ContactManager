@@ -1,4 +1,7 @@
 
+import java.util.Calendar;
+import java.util.Set;
+
 public class PastMeetingImpl extends MeetingImpl implements PastMeeting
 {
 
@@ -6,11 +9,8 @@ public class PastMeetingImpl extends MeetingImpl implements PastMeeting
 
 	public PastMeetingImpl(Calendar date,Set<Contact> participants, String notes, int ID)
 	{
-		String eol = System.getProperty("line.seperator");
-		Calendar rightNow = Calendar.getInstance();
-		String time&date = rightNow.toString();
-
 		super(date, participants, ID);
+		String eol = System.getProperty("line.seperator");
 		this.meetingNotes = notes;
 	}
 
