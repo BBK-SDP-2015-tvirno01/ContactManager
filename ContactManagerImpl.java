@@ -5,13 +5,10 @@ import java.util.List;
 import java.util.Set;
 import java.io.File;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.ArrayList;
+
+import java.util.*;
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.util.Date;
-import java.io.Reader;
 
 public class ContactManagerImpl
 {
@@ -26,7 +23,7 @@ public class ContactManagerImpl
 
 	public ContactManagerImpl()
 	{
-		contactFile = "."+File.seperator+"contacts.txt";
+		contactFile = "."+File.separator+"contacts.txt";
 		this.readLists();
 		Flusher hookWriter = new Flusher(this);
 		Thread hook = new Thread(hookWriter);
@@ -34,7 +31,7 @@ public class ContactManagerImpl
 	}
 
 
-	private void readLists()
+	private void readLists() throws FileNotFoundException, IOException
 	{
 		File cFile = new File(contactFile);
 		BufferedReader cIn = null;
@@ -64,8 +61,8 @@ public class ContactManagerImpl
 				cID = Integer.parseInt(cFields[0]);
 				cName = cFields[1];
 				cNotes = cFields[2];
-				Contact newContact = new ContactImpl(cName,cNotes,cID);
-				contactList.add(newContact);
+				ContactImpl newContact = new ContactImpl(cName,cNotes,cID);
+				this.contactList.add(newContact);
 			}
 
 			String[] mFields = new String[100];
@@ -82,7 +79,7 @@ public class ContactManagerImpl
 				mFields = line.split("\t");
 				mID = Integer.parseInt(mFields[0]);
 				mDate = f.parse(mFields[1]);
-				mCal = setTime(mDate);
+				mCal.setTime(mDate);
 				mNotes = mFields[3];
 				
 				for(i=3;i==99;i++)
@@ -91,14 +88,14 @@ public class ContactManagerImpl
 					{
 						break;
 					}else{
-						IDList[i-3] = mFields[i];
+						IDList[i-3] = Integer.parseInt(mFields[i]);
 					}
 				}
 
 				Set<Contact> participants = getContacts(IDList);
 
-				Meeting newMeeting = new PastMeeting(mCal, participants, mNotes, mID);
-				meetingList.add(newMeeting);
+				MeetingImpl newMeeting = new PastMeetingImpl(mCal, participants, mNotes, mID);
+				this.meetingList.add(newMeeting);
 
 				Arrays.fill(mFields,"");
 			}
@@ -125,7 +122,7 @@ public class ContactManagerImpl
 		}
 	}	
 
-	private void writeLists()
+	private void writeLists() throws FileNotFoundException, IOException
 	{
 		File cFile = new File(contactFile);
 		PrintWriter cOut = null;
@@ -142,9 +139,9 @@ public class ContactManagerImpl
 
 			cOut.println("ContactList");
 
-			for(Contact c : contactList)
+			for(ContactImpl c : contactList)
 			{
-				output = c.contactID + "\t" + c.contactName + "\t" + c.contactNotes;
+				output = c.contactID + "\t" + c.contactName + "\t" + c.getNotes();
 				cOut.println(output);
 			}
 
@@ -156,9 +153,9 @@ public class ContactManagerImpl
 			{
 				output = m.meetingID + "\t" + f.format(m.meetingDate);
 				
-				PastMeeting pM = m; //downcast meeting as past meeting to get notes field
+				PastMeetingImpl pM = (PastMeetingImpl) m; //downcast meeting as past meeting to get notes field
 				
-				output  = output + "\t" + pM.meetingNotes;
+				output  = output + "\t" + pM.getNotes();
 
 				for(ContactImpl c : m.participants)
 				{
@@ -189,7 +186,7 @@ public class ContactManagerImpl
 	{
 		this.meetingCount = this.meetingCount + 1;
 		Meeting nM = new PastMeetingImpl(date, contacts, text, this.meetingCount); 
-		Meeting newMeeting = (Meeting) nM;	//upcast new PastMeeting as Meeting (hence all meetings are instances of eachother)
+		Meeting newMeeting = (MeetingImpl) nM;	//upcast new PastMeeting as Meeting (hence all meetings are instances of eachother)
 		return newMeeting;
 	}
 
@@ -202,12 +199,12 @@ public class ContactManagerImpl
 				throw new IllegalArgumentException();
 			}
 
-			FutureMeeting newMeeting = (FutureMeeting) addNewMeeting(date, contacts, ""); //down cast Meeting as FutureMeeting
+			MeetingImpl newMeeting = (MeetingImpl) addNewMeeting(date, contacts, ""); //down cast Meeting as FutureMeeting
 			this.meetingList.add(newMeeting);
-			return newMeeting.getID();
+			return newMeeting.getId();
 
 		}catch(IllegalArgumentException ex){
-			System.consol.println("Invalid Future Meeting parameters");
+			System.out.println("Invalid Future Meeting parameters");
 		}
 	}
 
@@ -215,13 +212,14 @@ public class ContactManagerImpl
 	{
 		try
 		{
-			Meeting result = (PastMeeting) this.getMeeting(id);
-			if(result.equals(null))
+			MeetingImpl queryMeeting = (MeetingImpl) this.getMeeting(id);
+			if(queryMeeting.equals(null))
 			{
 				return null;
 			}else{
-				if(inPast(result.meetingDate))
+				if(inPast(queryMeeting.meetingDate))
 				{
+					PastMeeting result = (PastMeeting) queryMeeting;
 					return result;
 				}else{
 					throw new IllegalArgumentException();
@@ -236,15 +234,16 @@ public class ContactManagerImpl
 	{
 		try
 		{
-			Meeting result = (FutureMeeting) this.getMeeting(id);
-			if(result.equals(null))
+			MeetingImpl queryMeeting = (MeetingImpl) this.getMeeting(id);
+			if(queryMeeting.equals(null))
 			{
 				return null;
 			}else{
-				if(inPast(result.meetingDate))
+				if(inPast(queryMeeting.meetingDate))
 				{
 					throw new IllegalArgumentException();
 				}else{
+					FutureMeeting result = (FutureMeeting) queryMeeting;
 					return result;
 				}
 			}
@@ -279,7 +278,7 @@ public class ContactManagerImpl
 			}else{
 				for(MeetingImpl m : meetingList)
 				{
-					if(!isPast(m.meetingDate))
+					if(!inPast(m.meetingDate))
 					{
 						if(m.participants.contains(contact))
 						{
@@ -334,7 +333,7 @@ public class ContactManagerImpl
 			}else{
 				for(MeetingImpl m : meetingList)
 				{
-					if(isPast(m.meetingDate))
+					if(inPast(m.meetingDate))
 					{
 						if(m.participants.contains(contact))
 						{
@@ -390,14 +389,14 @@ public class ContactManagerImpl
 				throw new NullPointerException();
 			}
 			
-			PastMeeting pMeeting = (PastMeeting) getMeeting(id); //downcast Meeting as PastMeeting
+			PastMeetingImpl pMeeting = (PastMeetingImpl) getMeeting(id); //downcast Meeting as PastMeeting
 	
 			if(pMeeting.equals(null))
 			{
 				throw new IllegalArgumentException();
 			}
 	
-			if(!isPast(pMeeting.meetingDate))
+			if(!inPast(pMeeting.meetingDate))
 			{
 				throw new IllegalStateException();
 			}
