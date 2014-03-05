@@ -15,8 +15,8 @@ public class ContactManagerImpl
 
 	private int contactCount;
 	private int meetingCount;
-	private ArrayList<ContactImpl> contactList;
-	private ArrayList<MeetingImpl> meetingList;
+	private ArrayList<Contact> contactList;
+	private ArrayList<Meeting> meetingList;
 	private String contactFile;
 	private String meetingFile;
 	private String startupFile;
@@ -128,6 +128,9 @@ public class ContactManagerImpl
 		PrintWriter cOut = null;
 		try
 		{
+			MeetingImpl tempM = null;
+			ContactImpl tempC = null;
+
 			cOut = new PrintWriter(cFile);
 			//Clear contents of file prior to archiving
 			cOut.write("");	
@@ -139,9 +142,10 @@ public class ContactManagerImpl
 
 			cOut.println("ContactList");
 
-			for(ContactImpl c : contactList)
+			for(Contact c : contactList)
 			{
-				output = c.contactID + "\t" + c.contactName + "\t" + c.getNotes();
+				tempC = (ContactImpl) c;
+				output = tempC.contactID + "\t" + tempC.contactName + "\t" + tempC.getNotes();
 				cOut.println(output);
 			}
 
@@ -149,7 +153,7 @@ public class ContactManagerImpl
 
 			SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd HHmmss");
 
-			for(MeetingImpl m : meetingList)
+			for(Meeting m : meetingList)
 			{
 				output = m.meetingID + "\t" + f.format(m.meetingDate);
 				
@@ -157,9 +161,10 @@ public class ContactManagerImpl
 				
 				output  = output + "\t" + pM.getNotes();
 
-				for(ContactImpl c : m.participants)
+				for(Contact c : m.participants)
 				{
-					output = output + "\t" + c.contactID;
+					tempC = (ContactImpl) c;
+					output = output + "\t" + temp.contactID;
 				}
 
 				cOut.println(output);
@@ -270,9 +275,12 @@ public class ContactManagerImpl
 	{
 		List<Meeting> result = new ArrayList<Meeting>();
 		
+		Meeting temp = null;
+
 		try
 		{
-			if(!contactList.contains(contact))
+			ContactImpl queryContact = (ContactImpl) contact;
+			if(!contactList.contains(queryContact))
 			{
 				throw new IllegalArgumentException();
 			}else{
@@ -280,15 +288,16 @@ public class ContactManagerImpl
 				{
 					if(!inPast(m.meetingDate))
 					{
-						if(m.participants.contains(contact))
+						if(m.participants.contains(queryContact))
 						{
-							result.add(m);
+							temp = (Meeting) m;
+							result.add(temp);
 						}
 					}
 				}
 			}
 			
-			Comparator<MeetingImpl> cDate = new MeetingComparator<MeetingImpl>();
+			Comparator<Meeting> cDate = new MeetingComparator<Meeting>();
 
 			Collections.sort(result, cDate);
 
@@ -302,18 +311,21 @@ public class ContactManagerImpl
 	public List<Meeting> getFutureMeetingList(Calendar date)
 	{
 		List<Meeting> result = new ArrayList<Meeting>();
+
 		SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd");
 
+		Meeting temp = null;
 		
 		for(MeetingImpl m : meetingList)
 		{
 			if(f.format(date).equals(f.format(m.meetingDate)))
 			{
-				result.add(m);
+				temp = (Meeting) m;
+				result.add(temp);
 			}
 		}
 
-			Comparator<MeetingImpl> cDate = new MeetingComparator<MeetingImpl>();
+			Comparator<Meeting> cDate = new MeetingComparator<Meeting>();
 
 			Collections.sort(result, cDate);
 
@@ -324,6 +336,8 @@ public class ContactManagerImpl
 	public List<PastMeeting> getPastMeetingList(Contact contact)
 	{
 		List<PastMeeting> result = new ArrayList<PastMeeting>();
+
+		PastMeeting temp = null;
 		
 		try
 		{
@@ -337,7 +351,8 @@ public class ContactManagerImpl
 					{
 						if(m.participants.contains(contact))
 						{
-							result.add(m);
+							temp = (PastMeeting) m;
+							result.add(temp);
 						}
 					}
 				}

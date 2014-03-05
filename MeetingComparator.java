@@ -2,12 +2,15 @@
 import java.util.Calendar;
 import java.util.Comparator;
 
-public class MeetingComparator implements Comparator<MeetingImpl>
+public class MeetingComparator<Meeting> implements Comparator<Meeting>
 {
 	
-	public int compare(MeetingImpl m1, MeetingImpl m2)
+	public int compare(Meeting m1, Meeting m2)
 	{
-		if(m1.meetingDate.before(m2.meetingDate))
+		MeetingImpl mImpl1 = (MeetingImpl) m1;
+		MeetingImpl mImpl2 = (MeetingImpl) m2;
+
+		if(mImpl1.meetingDate.before(mImpl2.meetingDate))
 		{
 			return 1;
 		}else{
