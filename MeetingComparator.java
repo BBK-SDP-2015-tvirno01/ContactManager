@@ -1,21 +1,8 @@
 
-import java.util.Calendar;
 import java.util.Comparator;
 
-public class MeetingComparator<Meeting> implements Comparator<Meeting>
+public interface MeetingComparator<M extends Meeting> extends Comparator<M>
 {
-	
-	public int compare(Meeting m1, Meeting m2)
-	{
-		MeetingImpl mImpl1 = (MeetingImpl) m1;
-		MeetingImpl mImpl2 = (MeetingImpl) m2;
-
-		if(mImpl1.meetingDate.before(mImpl2.meetingDate))
-		{
-			return 1;
-		}else{
-			return -1;
-		}
-	}
+	//no methods, just restricting generics to Meetings
 
 }

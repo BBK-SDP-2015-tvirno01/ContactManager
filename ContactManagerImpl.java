@@ -128,7 +128,7 @@ public class ContactManagerImpl
 		PrintWriter cOut = null;
 		try
 		{
-			MeetingImpl tempM = null;
+			PastMeetingImpl tempM = null;
 			ContactImpl tempC = null;
 
 			cOut = new PrintWriter(cFile);
@@ -155,11 +155,8 @@ public class ContactManagerImpl
 
 			for(Meeting m : meetingList)
 			{
-				output = m.meetingID + "\t" + f.format(m.meetingDate);
-				
-				PastMeetingImpl pM = (PastMeetingImpl) m; //downcast meeting as past meeting to get notes field
-				
-				output  = output + "\t" + pM.getNotes();
+				tempM = (PastMeetingImpl) m;
+				output = tempM.meetingID + "\t" + f.format(tempM.meetingDate) + "\t" + tempM.getNotes();
 
 				for(Contact c : m.participants)
 				{
@@ -204,7 +201,7 @@ public class ContactManagerImpl
 				throw new IllegalArgumentException();
 			}
 
-			MeetingImpl newMeeting = (MeetingImpl) addNewMeeting(date, contacts, ""); //down cast Meeting as FutureMeeting
+			Meeting newMeeting = (FutureMeeting) addNewMeeting(date, contacts, ""); //down cast Meeting as FutureMeeting
 			this.meetingList.add(newMeeting);
 			return newMeeting.getId();
 
@@ -215,16 +212,20 @@ public class ContactManagerImpl
 
 	public PastMeeting getPastMeeting(int id)
 	{
+		PastMeetingImpl tempM = null;
+
 		try
 		{
-			MeetingImpl queryMeeting = (MeetingImpl) this.getMeeting(id);
-			if(queryMeeting.equals(null))
+			PastMeeting result = (PastMeeting) this.getMeeting(id);
+
+			tempM = (PastMeetingImpl) result;			
+
+			if(result.equals(null))
 			{
 				return null;
 			}else{
-				if(inPast(queryMeeting.meetingDate))
+				if(inPast(tempM.meetingDate))
 				{
-					PastMeeting result = (PastMeeting) queryMeeting;
 					return result;
 				}else{
 					throw new IllegalArgumentException();
@@ -237,18 +238,19 @@ public class ContactManagerImpl
 
 	public FutureMeeting getFutureMeeting(int id)
 	{
+		MeetingImpl tempM = null;
+
 		try
 		{
-			MeetingImpl queryMeeting = (MeetingImpl) this.getMeeting(id);
-			if(queryMeeting.equals(null))
+			FutureMeeting result = (FutureMeeting) this.getMeeting(id);
+			if(result.equals(null))
 			{
 				return null;
 			}else{
-				if(inPast(queryMeeting.meetingDate))
+				if(inPast(tempM.meetingDate))
 				{
 					throw new IllegalArgumentException();
 				}else{
-					FutureMeeting result = (FutureMeeting) queryMeeting;
 					return result;
 				}
 			}
@@ -259,12 +261,15 @@ public class ContactManagerImpl
 
 	public Meeting getMeeting(int id)
 	{
-		for(MeetingImpl m : meetingList)
+		MeetingImpl tempM = null;
+
+		for(Meeting m : meetingList)
 		{
-			if(m.meetingID==id)
+			tempM = (MeetingImpl) m;
+
+			if(tempM.meetingID==id)
 			{
-				Meeting result = m;
-				return result;
+				return m;
 			}
 		}
 
@@ -275,23 +280,22 @@ public class ContactManagerImpl
 	{
 		List<Meeting> result = new ArrayList<Meeting>();
 		
-		Meeting temp = null;
+		MeetingImpl tempM = null;
 
 		try
 		{
-			ContactImpl queryContact = (ContactImpl) contact;
-			if(!contactList.contains(queryContact))
+			if(!contactList.contains(contact))
 			{
 				throw new IllegalArgumentException();
 			}else{
-				for(MeetingImpl m : meetingList)
+				for(Meeting m : meetingList)
 				{
-					if(!inPast(m.meetingDate))
+					tempM = (MeetingImpl) m;
+					if(!inPast(tempM.meetingDate))
 					{
-						if(m.participants.contains(queryContact))
+						if(tempM.participants.contains(contact))
 						{
-							temp = (Meeting) m;
-							result.add(temp);
+							result.add(m);
 						}
 					}
 				}
@@ -314,14 +318,14 @@ public class ContactManagerImpl
 
 		SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd");
 
-		Meeting temp = null;
+		MeetingImpl tempM = null;
 		
-		for(MeetingImpl m : meetingList)
+		for(Meeting m : meetingList)
 		{
-			if(f.format(date).equals(f.format(m.meetingDate)))
+			tempM = (MeetingImpl) m;
+			if(f.format(date).equals(f.format(tempM.meetingDate)))
 			{
-				temp = (Meeting) m;
-				result.add(temp);
+				result.add(m);
 			}
 		}
 
@@ -337,7 +341,8 @@ public class ContactManagerImpl
 	{
 		List<PastMeeting> result = new ArrayList<PastMeeting>();
 
-		PastMeeting temp = null;
+		PastMeetingImpl tempM = null;
+		PastMeeting tempPM = null;
 		
 		try
 		{
@@ -345,20 +350,21 @@ public class ContactManagerImpl
 			{
 				throw new IllegalArgumentException();
 			}else{
-				for(MeetingImpl m : meetingList)
+				for(Meeting m : meetingList)
 				{
-					if(inPast(m.meetingDate))
+					tempM = (PastMeetingImpl) m;
+					if(inPast(tempM.meetingDate))
 					{
-						if(m.participants.contains(contact))
+						if(tempM.participants.contains(contact))
 						{
-							temp = (PastMeeting) m;
-							result.add(temp);
+							tempPM = (PastMeeting) m;
+							result.add(tempPM);
 						}
 					}
 				}
 			}
 			
-			Comparator<MeetingImpl> cDate = new MeetingComparator<MeetingImpl>();
+			Comparator<Meeting> cDate = new MeetingComparator<Meeting>();
 
 			Collections.sort(result, cDate);
 
