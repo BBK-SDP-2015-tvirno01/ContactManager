@@ -1,14 +1,7 @@
 
-
-import java.util.Calendar;
-import java.util.List;
-import java.util.Set;
-import java.io.File;
-import java.util.Comparator;
-
 import java.util.*;
 import java.io.*;
-import java.text.SimpleDateFormat;
+import java.text.*;
 
 public class ContactManagerImpl
 {
@@ -31,12 +24,12 @@ public class ContactManagerImpl
 	}
 
 
-	private void readLists() throws FileNotFoundException, IOException
+	private void readLists()
 	{
-		File cFile = new File(contactFile);
 		BufferedReader cIn = null;
 		try
-		{			
+		{	
+			File cFile = new File(contactFile);
 			cIn = new BufferedReader(new FileReader(cFile));
 
 			String line;
@@ -99,10 +92,11 @@ public class ContactManagerImpl
 
 				Arrays.fill(mFields,"");
 			}
-			
 		}catch(FileNotFoundException ex){
 			System.out.println("MeetingList and ContactList files do not exist");
 		}catch(IOException ex){
+			ex.printStackTrace();
+		}catch(ParseException ex){
 			ex.printStackTrace();
 		}finally{
 			closeReader(cIn);
@@ -122,12 +116,12 @@ public class ContactManagerImpl
 		}
 	}	
 
-	private void writeLists() throws FileNotFoundException, IOException
+	private void writeLists()
 	{
-		File cFile = new File(contactFile);
 		PrintWriter cOut = null;
 		try
 		{
+			File cFile = new File(contactFile);
 			PastMeetingImpl tempM = null;
 			ContactImpl tempC = null;
 
@@ -158,20 +152,17 @@ public class ContactManagerImpl
 				tempM = (PastMeetingImpl) m;
 				output = tempM.meetingID + "\t" + f.format(tempM.meetingDate) + "\t" + tempM.getNotes();
 
-				for(Contact c : m.participants)
+				for(Contact c : tempM.participants)
 				{
 					tempC = (ContactImpl) c;
-					output = output + "\t" + temp.contactID;
+					output = output + "\t" + tempC.contactID;
 				}
 
 				cOut.println(output);
 			}
 
-
 		}catch(FileNotFoundException ex){
 			System.out.println("Cannot write to file");
-		}catch(IOException ex){
-			ex.printStackTrace();
 		}finally{
 			cOut.close();
 		}
@@ -207,6 +198,8 @@ public class ContactManagerImpl
 
 		}catch(IllegalArgumentException ex){
 			System.out.println("Invalid Future Meeting parameters");
+			Integer nullResult = null;
+			return nullResult;
 		}
 	}
 
@@ -233,6 +226,8 @@ public class ContactManagerImpl
 			}
 		}catch(IllegalArgumentException ex){
 			System.out.println("Selected Meeting occurs in the past");
+			PastMeeting nullResult = null;
+			return nullResult;
 		}
 	}
 
@@ -256,6 +251,8 @@ public class ContactManagerImpl
 			}
 		}catch(IllegalArgumentException ex){
 			System.out.println("Selected Meeting occurs in the past");
+			FutureMeeting nullResult = null;
+			return nullResult;
 		}
 	}
 
@@ -301,7 +298,7 @@ public class ContactManagerImpl
 				}
 			}
 			
-			Comparator<Meeting> cDate = new MeetingComparator<Meeting>();
+			MeetingComparator<Meeting> cDate = new MeetingComparatorImpl<Meeting>();
 
 			Collections.sort(result, cDate);
 
@@ -309,6 +306,7 @@ public class ContactManagerImpl
 
 		}catch(IllegalArgumentException ex){
 			System.out.println("Contact is not a member of contact list");
+			return result;
 		}
 	}
 
@@ -329,7 +327,7 @@ public class ContactManagerImpl
 			}
 		}
 
-			Comparator<Meeting> cDate = new MeetingComparator<Meeting>();
+			MeetingComparator<Meeting> cDate = new MeetingComparatorImpl<Meeting>();
 
 			Collections.sort(result, cDate);
 
@@ -357,14 +355,14 @@ public class ContactManagerImpl
 					{
 						if(tempM.participants.contains(contact))
 						{
-							tempPM = (PastMeeting) m;
+							tempPM = (PastMeeting) tempM;
 							result.add(tempPM);
 						}
 					}
 				}
 			}
 			
-			Comparator<Meeting> cDate = new MeetingComparator<Meeting>();
+			MeetingComparator<PastMeeting> cDate = new MeetingComparatorImpl<PastMeeting>();
 
 			Collections.sort(result, cDate);
 
@@ -372,6 +370,7 @@ public class ContactManagerImpl
 
 		}catch(IllegalArgumentException ex){
 			System.out.println("Contact is not a member of contact list");
+			return result;
 		}
 	}
 
@@ -410,7 +409,7 @@ public class ContactManagerImpl
 				throw new NullPointerException();
 			}
 			
-			PastMeetingImpl pMeeting = (PastMeetingImpl) getMeeting(id); //downcast Meeting as PastMeeting
+			PastMeetingImpl pMeeting = (PastMeetingImpl) getMeeting(id); //downcast Meeting as PastMeetingImpl
 	
 			if(pMeeting.equals(null))
 			{
@@ -423,6 +422,7 @@ public class ContactManagerImpl
 			}
 
 			pMeeting.addNotes(text);
+
 		}catch(NullPointerException ex){
 			System.out.println("Meeting notes are null");
 		}catch(IllegalArgumentException ex){
@@ -452,23 +452,25 @@ public class ContactManagerImpl
 	
 	public Set<Contact> getContacts(int... ids)
 	{
+		Set<Contact> result = new HashSet<Contact>();
+		ContactImpl tempC = null;
 		try
 		{
-			Set<int> control = new HashSet<int>();
+			List<Integer> control = new ArrayList<Integer>();
 
 			for(int i : ids)
 			{
 				control.add(i);
 			}
 
-			Set<Contact> result = new HashSet<Contact>();
-
-			for(ContactImpl c : this.contactList)
+			for(Contact c : this.contactList)
 			{
-				if(control.contains(c.contactID))
+				tempC = (ContactImpl) c;
+
+				if(control.contains(tempC.contactID))
 				{
 					result.add(c);
-					control.remove(c.contactID);
+					control.remove(tempC.contactID);
 				}
 			}
 
@@ -481,11 +483,15 @@ public class ContactManagerImpl
 
 		}catch(IllegalArgumentException ex){
 			System.out.println("Not all IDs exist in contact list");
+			result = null;
+			return result;
 		}
 	}
 
 	public Set<Contact> getContact(String name)
 	{
+		Set<Contact> result = new HashSet<Contact>();
+		ContactImpl tempC = null;
 		try
 		{
 			if(name.equals(null))
@@ -493,11 +499,10 @@ public class ContactManagerImpl
 				throw new NullPointerException();
 			}
 
-			Set<Contact> result = new HashSet<Contact>();
-
-			for(ContactImpl c : this.contactList)
+			for(Contact c : this.contactList)
 			{
-				if(c.contactName.contains(name))
+				tempC = (ContactImpl) c;
+				if(tempC.contactName.contains(name))
 				{
 					result.add(c);
 				}
@@ -507,6 +512,8 @@ public class ContactManagerImpl
 
 		}catch(NullPointerException ex){
 			System.out.println("Search criteria is null");
+			result = null;
+			return result;
 		}
 	}
 
