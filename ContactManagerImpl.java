@@ -5,9 +5,6 @@ import java.text.*;
 
 public class ContactManagerImpl
 {
-
-	private int contactCount;
-	private int meetingCount;
 	private ArrayList<Contact> contactList;
 	private ArrayList<Meeting> meetingList;
 
@@ -35,13 +32,9 @@ public class ContactManagerImpl
 		try
 		{
 			impt = new ObjectInputStream(new FileInputStream(".contacts.txt"));
-			this.contactCount = (int) impt.readObject();
-			this.meetingCount = (int) impt.readObject();
 			this.contactList = (ArrayList<Contact>) impt.readObject();
 			this.meetingList = (ArrayList<Meeting>) impt.readObject();
 		}catch(FileNotFoundException ex){
-			this.contactCount = 0;
-			this.meetingCount = 0;
 			this.contactList = new ArrayList<Contact>();
 			this.meetingList = new ArrayList<Meeting>();
 		}catch(ClassNotFoundException ex){
@@ -64,14 +57,21 @@ public class ContactManagerImpl
 		return testDate.before(rightNow);
 	}
 
+	private int generateUniqueID()
+	{
+		UUID uniqueID = UUID.randomUUID();
+
+		return (int) uniqueID.timestamp();
+		
+	}
+
 	private Meeting addNewMeeting(Calendar date, Set<Contact> contacts, String text)
 	{
 		/**
 		*All meetings instantiated as PastMeetings to enable meetingNotes field
 		*/
 
-		this.meetingCount = this.meetingCount + 1;
-		Meeting newMeeting = new PastMeetingImpl(date, contacts, text, this.meetingCount); 
+		Meeting newMeeting = new PastMeetingImpl(date, contacts, text, this.generateUniqueID()); 
 		return newMeeting;
 	}
 
@@ -281,8 +281,7 @@ public class ContactManagerImpl
 				throw new IllegalArgumentException();
 			}
 
-			this.meetingCount = this.meetingCount + 1;
-			Meeting newMeeting = new PastMeetingImpl(date, contacts, text, this.meetingCount);
+			Meeting newMeeting = this.addNewMeeting(date, contacts, text);
 
 			this.meetingList.add(newMeeting);
 
@@ -335,8 +334,7 @@ public class ContactManagerImpl
 				throw new NullPointerException();
 			}
 			
-			this.contactCount = this.contactCount + 1;
-			Contact newContact = new ContactImpl(name,notes,this.contactCount);
+			Contact newContact = new ContactImpl(name,notes,this.generateUniqueID());
 			this.contactList.add(newContact);
 
 		}catch(NullPointerException ex){
@@ -422,8 +420,6 @@ public class ContactManagerImpl
 		{
 			saveFile = new FileOutputStream(".contacts.txt");
 			ObjectOutputStream expt = new ObjectOutputStream(saveFile);
-			expt.writeObject(this.contactCount);
-			expt.writeObject(this.meetingCount);
 			expt.writeObject(this.contactList);
 			expt.writeObject(this.meetingList);
 		}catch(IOException ex){
