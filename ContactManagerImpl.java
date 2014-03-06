@@ -61,7 +61,7 @@ public class ContactManagerImpl
 	{
 		UUID uniqueID = UUID.randomUUID();
 
-		return (int) uniqueID.timestamp();
+		return uniqueID.clockSequence();
 		
 	}
 
