@@ -4,7 +4,11 @@ import java.io.*;
 import java.text.*;
 import java.util.concurrent.atomic.*;
 
-public class ContactManagerImpl
+/**
+* A class to manage your contacts and meetings.
+*/
+
+public class ContactManagerImpl implements ContactManager
 {
 	private AtomicInteger IDgenerator;
 	private HashSet<Contact> contactList;
@@ -385,7 +389,7 @@ public class ContactManagerImpl
 		}
 	}
 
-	public Set<Contact> getContact(String name)
+	public Set<Contact> getContacts(String name)
 	{
 		Set<Contact> result = new HashSet<Contact>();
 		ContactImpl tempC = null;
