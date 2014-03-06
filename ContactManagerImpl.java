@@ -2,10 +2,11 @@
 import java.util.*;
 import java.io.*;
 import java.text.*;
+import java.util.concurrent.atomic.*;
 
 public class ContactManagerImpl
 {
-	private int IDgenerator;
+	private AtomicInteger IDgenerator;
 	private ArrayList<Contact> contactList;
 	private ArrayList<Meeting> meetingList;
 
@@ -33,11 +34,11 @@ public class ContactManagerImpl
 		try
 		{
 			impt = new ObjectInputStream(new FileInputStream(".contacts.txt"));
-			this.IDgenerator = (int) impt.readObject();
+			this.IDgenerator = (AtomicInteger) impt.readObject();
 			this.contactList = (ArrayList<Contact>) impt.readObject();
 			this.meetingList = (ArrayList<Meeting>) impt.readObject();
 		}catch(FileNotFoundException ex){
-			this.IDgenerator = 0;
+			this.IDgenerator = new AtomicInteger();
 			this.contactList = new ArrayList<Contact>();
 			this.meetingList = new ArrayList<Meeting>();
 		}catch(ClassNotFoundException ex){
@@ -62,9 +63,7 @@ public class ContactManagerImpl
 
 	private int generateUniqueID()
 	{
-		IDgenerator = IDgenerator + 1;
-
-		return IDgenerator;	
+		return IDgenerator.incrementAndGet();	
 	}
 
 	private Meeting addNewMeeting(Calendar date, Set<Contact> contacts, String text)
