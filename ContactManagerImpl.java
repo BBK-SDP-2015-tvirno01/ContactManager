@@ -5,6 +5,7 @@ import java.text.*;
 
 public class ContactManagerImpl
 {
+	private int IDgenerator;
 	private ArrayList<Contact> contactList;
 	private ArrayList<Meeting> meetingList;
 
@@ -32,9 +33,11 @@ public class ContactManagerImpl
 		try
 		{
 			impt = new ObjectInputStream(new FileInputStream(".contacts.txt"));
+			this.IDgenerator = (int) impt.readObject();
 			this.contactList = (ArrayList<Contact>) impt.readObject();
 			this.meetingList = (ArrayList<Meeting>) impt.readObject();
 		}catch(FileNotFoundException ex){
+			this.IDgenerator = 0;
 			this.contactList = new ArrayList<Contact>();
 			this.meetingList = new ArrayList<Meeting>();
 		}catch(ClassNotFoundException ex){
@@ -59,10 +62,9 @@ public class ContactManagerImpl
 
 	private int generateUniqueID()
 	{
-		UUID uniqueID = UUID.randomUUID();
+		IDgenerator = IDgenerator + 1;
 
-		return uniqueID.clockSequence();
-		
+		return IDgenerator;	
 	}
 
 	private Meeting addNewMeeting(Calendar date, Set<Contact> contacts, String text)
@@ -420,6 +422,7 @@ public class ContactManagerImpl
 		{
 			saveFile = new FileOutputStream(".contacts.txt");
 			ObjectOutputStream expt = new ObjectOutputStream(saveFile);
+			expt.writeObject(this.IDgenerator);
 			expt.writeObject(this.contactList);
 			expt.writeObject(this.meetingList);
 		}catch(IOException ex){
