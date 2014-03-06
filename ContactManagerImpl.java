@@ -10,163 +10,52 @@ public class ContactManagerImpl
 	private int meetingCount;
 	private ArrayList<Contact> contactList;
 	private ArrayList<Meeting> meetingList;
-	private String contactFile;
-	private String meetingFile;
-	private String startupFile;
 
 	public ContactManagerImpl()
 	{
-		contactFile = "."+File.separator+"contacts.txt";
-		this.readLists();
+		/**
+		*Instantiation of member fields
+		*Initiate Shutdown Thread to run flusher, calls flush()
+		*/
+
+		this.readFile();
+
 		Flusher hookWriter = new Flusher(this);
 		Thread hook = new Thread(hookWriter);
 		Runtime.getRuntime().addShutdownHook(hook);
 	}
 
-
-	private void readLists()
+	private void readFile()
 	{
-		BufferedReader cIn = null;
-		try
-		{	
-			File cFile = new File(contactFile);
-			cIn = new BufferedReader(new FileReader(cFile));
+		/**
+		*Data stored in text file called contacts.txt in current file directory
+		*/
 
-			String line;
-
-			String[] sFields = new String[1];
-
-			while((line = cIn.readLine()) != "ContactList")
-			{
-				sFields = line.split("\t");
-				this.contactCount = Integer.parseInt(sFields[0]);
-				this.meetingCount = Integer.parseInt(sFields[1]);
-			}			
-
-			String[] cFields = new String[2];
-			String cName;
-			int cID;
-			String cNotes;
-
-			while((line = cIn.readLine()) != "MeetingList")
-			{
-				cFields = line.split("\t");
-				cID = Integer.parseInt(cFields[0]);
-				cName = cFields[1];
-				cNotes = cFields[2];
-				ContactImpl newContact = new ContactImpl(cName,cNotes,cID);
-				this.contactList.add(newContact);
-			}
-
-			String[] mFields = new String[100];
-			int[] IDList = new int[97];
-			SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd HHmmss");
-			Date mDate;
-			Calendar mCal = Calendar.getInstance();
-			int mID;
-			String mNotes;
-			int i;
-			
-			while((line = cIn.readLine()) != null)
-			{
-				mFields = line.split("\t");
-				mID = Integer.parseInt(mFields[0]);
-				mDate = f.parse(mFields[1]);
-				mCal.setTime(mDate);
-				mNotes = mFields[3];
-				
-				for(i=3;i==99;i++)
-				{
-					if(mFields[i].equals(""))
-					{
-						break;
-					}else{
-						IDList[i-3] = Integer.parseInt(mFields[i]);
-					}
-				}
-
-				Set<Contact> participants = getContacts(IDList);
-
-				MeetingImpl newMeeting = new PastMeetingImpl(mCal, participants, mNotes, mID);
-				this.meetingList.add(newMeeting);
-
-				Arrays.fill(mFields,"");
-			}
-		}catch(FileNotFoundException ex){
-			System.out.println("MeetingList and ContactList files do not exist");
-		}catch(IOException ex){
-			ex.printStackTrace();
-		}catch(ParseException ex){
-			ex.printStackTrace();
-		}finally{
-			closeReader(cIn);
-		}
-	}
-
-	private void closeReader(Reader reader)
-	{
+		ObjectInputStream impt = null;
 		try
 		{
-			if(reader != null)
-			{
-				reader.close();
-			}
+			impt = new ObjectInputStream(new FileInputStream(".contacts.txt"));
+			this.contactCount = (int) impt.readObject();
+			this.meetingCount = (int) impt.readObject();
+			this.contactList = (ArrayList<Contact>) impt.readObject();
+			this.meetingList = (ArrayList<Meeting>) impt.readObject();
+		}catch(FileNotFoundException ex){
+			this.contactCount = 0;
+			this.meetingCount = 0;
+			this.contactList = new ArrayList<Contact>();
+			this.meetingList = new ArrayList<Meeting>();
+		}catch(ClassNotFoundException ex){
+			ex.printStackTrace();
 		}catch(IOException ex){
 			ex.printStackTrace();
-		}
-	}	
-
-	private void writeLists()
-	{
-		PrintWriter cOut = null;
-		try
-		{
-			File cFile = new File(contactFile);
-			PastMeetingImpl tempM = null;
-			ContactImpl tempC = null;
-
-			cOut = new PrintWriter(cFile);
-			//Clear contents of file prior to archiving
-			cOut.write("");	
-
-			String output;
-
-			output = this.contactCount + "\t" + this.meetingCount;
-			cOut.println(output);
-
-			cOut.println("ContactList");
-
-			for(Contact c : contactList)
-			{
-				tempC = (ContactImpl) c;
-				output = tempC.contactID + "\t" + tempC.contactName + "\t" + tempC.getNotes();
-				cOut.println(output);
-			}
-
-			cOut.println("MeetingList");
-
-			SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd HHmmss");
-
-			for(Meeting m : meetingList)
-			{
-				tempM = (PastMeetingImpl) m;
-				output = tempM.meetingID + "\t" + f.format(tempM.meetingDate) + "\t" + tempM.getNotes();
-
-				for(Contact c : tempM.participants)
-				{
-					tempC = (ContactImpl) c;
-					output = output + "\t" + tempC.contactID;
-				}
-
-				cOut.println(output);
-			}
-
-		}catch(FileNotFoundException ex){
-			System.out.println("Cannot write to file");
 		}finally{
-			cOut.close();
+			try
+			{
+				impt.close();
+			}catch(IOException ex){
+				ex.printStackTrace();
+			}
 		}
-
 	}
 
 	private boolean inPast(Calendar testDate)
@@ -177,9 +66,12 @@ public class ContactManagerImpl
 
 	private Meeting addNewMeeting(Calendar date, Set<Contact> contacts, String text)
 	{
+		/**
+		*All meetings instantiated as PastMeetings to enable meetingNotes field
+		*/
+
 		this.meetingCount = this.meetingCount + 1;
-		Meeting nM = new PastMeetingImpl(date, contacts, text, this.meetingCount); 
-		Meeting newMeeting = (MeetingImpl) nM;	//upcast new PastMeeting as Meeting (hence all meetings are instances of eachother)
+		Meeting newMeeting = new PastMeetingImpl(date, contacts, text, this.meetingCount); 
 		return newMeeting;
 	}
 
@@ -192,7 +84,7 @@ public class ContactManagerImpl
 				throw new IllegalArgumentException();
 			}
 
-			Meeting newMeeting = (FutureMeeting) addNewMeeting(date, contacts, ""); //down cast Meeting as FutureMeeting
+			Meeting newMeeting = addNewMeeting(date, contacts, "");
 			this.meetingList.add(newMeeting);
 			return newMeeting.getId();
 
@@ -205,11 +97,12 @@ public class ContactManagerImpl
 
 	public PastMeeting getPastMeeting(int id)
 	{
+		PastMeeting result = null;
 		PastMeetingImpl tempM = null;
 
 		try
 		{
-			PastMeeting result = (PastMeeting) this.getMeeting(id);
+			result = (PastMeeting) this.getMeeting(id);
 
 			tempM = (PastMeetingImpl) result;			
 
@@ -226,8 +119,8 @@ public class ContactManagerImpl
 			}
 		}catch(IllegalArgumentException ex){
 			System.out.println("Selected Meeting occurs in the past");
-			PastMeeting nullResult = null;
-			return nullResult;
+			result = null;
+			return result;
 		}
 	}
 
@@ -389,7 +282,7 @@ public class ContactManagerImpl
 			}
 
 			this.meetingCount = this.meetingCount + 1;
-			PastMeeting newMeeting = new PastMeetingImpl(date, contacts, text, this.meetingCount);
+			Meeting newMeeting = new PastMeetingImpl(date, contacts, text, this.meetingCount);
 
 			this.meetingList.add(newMeeting);
 
@@ -420,6 +313,7 @@ public class ContactManagerImpl
 			{
 				throw new IllegalStateException();
 			}
+
 
 			pMeeting.addNotes(text);
 
@@ -457,6 +351,10 @@ public class ContactManagerImpl
 		try
 		{
 			List<Integer> control = new ArrayList<Integer>();
+			/**
+			*control Array used to confirm that all ids have been found
+			*ids are removed as they are found in contactList
+			*/
 
 			for(int i : ids)
 			{
@@ -519,7 +417,25 @@ public class ContactManagerImpl
 
 	public void flush()
 	{
-		writeLists();
+		FileOutputStream saveFile = null;
+		try
+		{
+			saveFile = new FileOutputStream(".contacts.txt");
+			ObjectOutputStream expt = new ObjectOutputStream(saveFile);
+			expt.writeObject(this.contactCount);
+			expt.writeObject(this.meetingCount);
+			expt.writeObject(this.contactList);
+			expt.writeObject(this.meetingList);
+		}catch(IOException ex){
+			ex.printStackTrace();
+		}finally{
+			try
+			{
+				saveFile.close();
+			}catch(IOException ex){
+				ex.printStackTrace();
+			}
+		}
 	}
 
 }
