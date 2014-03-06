@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.*;
 public class ContactManagerImpl
 {
 	private AtomicInteger IDgenerator;
-	private ArrayList<Contact> contactList;
-	private ArrayList<Meeting> meetingList;
+	private HashSet<Contact> contactList;
+	private HashSet<Meeting> meetingList;
 
 	public ContactManagerImpl()
 	{
@@ -35,12 +35,12 @@ public class ContactManagerImpl
 		{
 			impt = new ObjectInputStream(new FileInputStream(".contacts.txt"));
 			this.IDgenerator = (AtomicInteger) impt.readObject();
-			this.contactList = (ArrayList<Contact>) impt.readObject();
-			this.meetingList = (ArrayList<Meeting>) impt.readObject();
+			this.contactList = (HashSet<Contact>) impt.readObject();
+			this.meetingList = (HashSet<Meeting>) impt.readObject();
 		}catch(FileNotFoundException ex){
 			this.IDgenerator = new AtomicInteger();
-			this.contactList = new ArrayList<Contact>();
-			this.meetingList = new ArrayList<Meeting>();
+			this.contactList = new HashSet<Contact>();
+			this.meetingList = new HashSet<Meeting>();
 		}catch(ClassNotFoundException ex){
 			ex.printStackTrace();
 		}catch(IOException ex){
