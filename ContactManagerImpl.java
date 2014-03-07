@@ -19,14 +19,12 @@ public class ContactManagerImpl implements ContactManager
 	private HashSet<Contact> contactList;
 	private HashSet<Meeting> meetingList;
 
-
+	/**
+	*Instantiation of member fields
+	*Initiate Shutdown Thread to run flusher, calls flush()
+	*/
 	public ContactManagerImpl()
 	{
-		/**
-		*Instantiation of member fields
-		*Initiate Shutdown Thread to run flusher, calls flush()
-		*/
-
 		this.readFile();
 
 		Flusher hookWriter = new Flusher(this);
@@ -34,12 +32,16 @@ public class ContactManagerImpl implements ContactManager
 		Runtime.getRuntime().addShutdownHook(hook);
 	}
 
+	/**
+	*Reads serialized data structures from file
+	*Data stored in text file called contacts.txt in current file directory
+	*@throws FileNotFoundException if contacts.txt does not exist in the current directory. 
+	*In this instance the assumption is that this is a new Contact Manager and that the new empty data structures are created
+	*@throws ClassNotFoundException if the serialized class read from file is not of the expected type
+	*@throws IOException
+	*/
 	private void readFile()
 	{
-		/**
-		*Data stored in text file called contacts.txt in current file directory
-		*/
-
 		ObjectInputStream impt = null;
 		try
 		{
@@ -65,6 +67,11 @@ public class ContactManagerImpl implements ContactManager
 		}
 	}
 
+	/**
+	*Method for determining if Calendar instance occurs in the past
+	*@param Calendar instance for comparison to current time/date
+	*@return True if the parameter Calendar instance is in the past
+	*/
 	private boolean inPast(Calendar testDate)
 	{
 		Calendar rightNow = Calendar.getInstance();
@@ -82,7 +89,11 @@ public class ContactManagerImpl implements ContactManager
 
 	/**
 	*All meetings instantiated as PastMeetings to instantiate meetingNotes field. This makes use of the fact that
-	*all Meetings are instances of PastMeeting. 
+	*all Meetings are instances of PastMeeting.
+	*@param date Date of the Meeting
+	*@param contacts Meeting participants
+	*@param text Meeting notes to be added to Meeting (note this will be "" for new Meetings that occur in the future)
+	*@return returns newly created Meeting
 	*/
 	private Meeting addNewMeeting(Calendar date, Set<Contact> contacts, String text)
 	{
@@ -428,6 +439,11 @@ public class ContactManagerImpl implements ContactManager
 		}
 	}
 
+	/**
+	*ContactManagerImpl member fileds/data structures are all serializable and are flattened 
+	*using ObjectOutputStream() to contacts.txt in the current file location
+	*@throws IOexception 
+	*/
 	public void flush()
 	{
 		FileOutputStream saveFile = null;
