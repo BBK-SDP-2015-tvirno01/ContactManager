@@ -84,7 +84,7 @@ public class ContactManagerImpl implements ContactManager
 	*/
 	private int generateUniqueID()
 	{
-		return IDgenerator.incrementAndGet();	
+		return this.IDgenerator.incrementAndGet();	
 	}
 
 	/**

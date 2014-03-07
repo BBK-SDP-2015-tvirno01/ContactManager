@@ -9,7 +9,8 @@ import java.util.Comparator;
 public class MeetingComparatorImpl<M extends Meeting> implements MeetingComparator<M>
 {
 	/**
-	*Comparison based on chronology of the two meetings
+	*Comparison based on chronology of the two Meetings.
+	*Note that if two meetings occur at exactly the same time then the result will be -1 
 	*@params Meetings for comparison
 	*@returns positive int if parameter Meetings are in chronological order
 	*/
