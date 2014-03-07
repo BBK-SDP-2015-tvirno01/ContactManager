@@ -2,9 +2,17 @@
 import java.util.Calendar;
 import java.util.Comparator;
 
+/**
+*Class for comparing Meetings wrt the date of the meeting. 
+*/
+
 public class MeetingComparatorImpl<M extends Meeting> implements MeetingComparator<M>
 {
-	
+	/**
+	*Comparison based on chronology of the two meetings
+	*@params Meetings for comparison
+	*@returns positive int if parameter Meetings are in chronological order
+	*/
 	public int compare(M meeting1, M meeting2)
 	{
 		MeetingImpl mImpl1 = (MeetingImpl) meeting1;

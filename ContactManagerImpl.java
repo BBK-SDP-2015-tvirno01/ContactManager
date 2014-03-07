@@ -10,9 +10,15 @@ import java.util.concurrent.atomic.*;
 
 public class ContactManagerImpl implements ContactManager
 {
+	/**
+	*Each ContactManagerImpl stores Contacts and Meetings. A HashSet is implemented for both as 
+	*meetings and contacts are all unique, due to the unique reference ID generated.
+	*An incremented AtomicInteger is used to generate unique integer IDs for Contacts and Meetings
+	*/
 	private AtomicInteger IDgenerator;
 	private HashSet<Contact> contactList;
 	private HashSet<Meeting> meetingList;
+
 
 	public ContactManagerImpl()
 	{
@@ -65,17 +71,21 @@ public class ContactManagerImpl implements ContactManager
 		return testDate.before(rightNow);
 	}
 
+	/**
+	*Method for generating unique IDs for stored Contacts and Meetings
+	*@return the newly generated ID
+	*/
 	private int generateUniqueID()
 	{
 		return IDgenerator.incrementAndGet();	
 	}
 
+	/**
+	*All meetings instantiated as PastMeetings to instantiate meetingNotes field. This makes use of the fact that
+	*all Meetings are instances of PastMeeting. 
+	*/
 	private Meeting addNewMeeting(Calendar date, Set<Contact> contacts, String text)
 	{
-		/**
-		*All meetings instantiated as PastMeetings to enable meetingNotes field
-		*/
-
 		Meeting newMeeting = new PastMeetingImpl(date, contacts, text, this.generateUniqueID()); 
 		return newMeeting;
 	}
